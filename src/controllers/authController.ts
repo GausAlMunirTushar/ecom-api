@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { pick } from 'lodash';
+import jwt from 'jsonwebtoken';
 
 import { checkPassword } from '../utils/password';
 import { User, OTP } from '../models';
@@ -35,7 +36,16 @@ const loginUser = async (req: Request, res: Response) => {
 		if (!user.confirmed) {
 			return res.status(403).json({ message: 'User is not verified' });
 		}
-		return res.status(200).json({ message: 'User logged in successfully' });
+		const token = jwt.sign(
+			{ email, role: user.role },
+			process.env.JWT_SECRET as jwt.Secret,
+			{ expiresIn: '1h' }
+		);
+		return res.status(200).json({
+			status: 'success',
+			token,
+			message: 'User logged in successfully',
+		});
 	} catch (err: any) {
 		return res.status(400).json({ message: err.message });
 	}
