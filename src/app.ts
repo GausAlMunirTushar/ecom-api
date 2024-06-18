@@ -1,5 +1,6 @@
 import express from 'express';
 import morgan from 'morgan';
+import helmet from 'helmet';
 
 import { healthCheck } from './controllers/healthController';
 import { notFoundHandler } from './middlewares/notFoundHandler';
@@ -12,6 +13,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use(helmet());
 
 // Database connection
 connectDB();

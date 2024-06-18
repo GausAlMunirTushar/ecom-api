@@ -74,4 +74,29 @@ const resendVerficationCode = async (req: Request, res: Response) => {
 	}
 };
 
-export { registerUser, loginUser, resendVerficationCode };
+const verifyUser = async (req: Request, res: Response) => {
+	try {
+		const { email, code } = req.body;
+		const user = await User.findOne({ email });
+		if (!user) {
+			return res.status(404).json({ message: 'User does not exit!' });
+		}
+		if (user.confirmed) {
+			return res
+				.status(200)
+				.json({ message: 'User is already verified!' });
+		}
+		let verifiedOTP = await OTP.findOne({ email, otp: code });
+		if (verifiedOTP && user) {
+			await User.findOneAndUpdate({ email }, { confirmed: true });
+			return res
+				.status(200)
+				.json({ message: 'User verified successfully' });
+		}
+		return res.status(400).json({ message: 'Invalid verification code' });
+	} catch (err: any) {
+		return res.status(400).json({ message: err.message });
+	}
+};
+
+export { registerUser, loginUser, resendVerficationCode, verifyUser };
