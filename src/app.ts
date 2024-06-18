@@ -6,7 +6,8 @@ import { healthCheck } from './controllers/healthController';
 import { notFoundHandler } from './middlewares/notFoundHandler';
 import { errorHandler } from './middlewares/errorHandler';
 import connectDB from './config/database';
-import { authRoutes, userRoutes } from './routes';
+import { authRoutes, userRoutes, categoryRoutes } from './routes';
+
 const app = express();
 
 // Middleware
@@ -21,6 +22,7 @@ connectDB();
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/category', categoryRoutes);
 
 // Home route
 app.get('/', (_req, res) => {
