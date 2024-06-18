@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { pick } from 'lodash';
 
-import User from '../models/userModel';
-
+import { checkPassword } from '../utils/password';
+import { User, OTP } from '../models';
 
 const registerUser = async (req: Request, res: Response) => {
 	try {
@@ -12,7 +12,7 @@ const registerUser = async (req: Request, res: Response) => {
 			return res.status(400).json({ message: 'User already exists' });
 		}
 		user = new User({ ...payload });
-		
+
 		await user.save();
 		res.status(201).json({ message: 'User register successfully' });
 	} catch (err: any) {
@@ -20,6 +20,58 @@ const registerUser = async (req: Request, res: Response) => {
 	}
 };
 
-const loginUser = async (req: Request, res: Response) => {};
+const loginUser = async (req: Request, res: Response) => {
+	try {
+		const { email, password } = req.body;
+		let user = await User.findOne({ email });
+		if (!user) {
+			return res.status(404).json({ message: 'User does not exit!' });
+		}
+		const isPasswordMatch = await checkPassword(password, user.password);
 
-export { registerUser, loginUser };
+		if (!isPasswordMatch) {
+			return res.status(400).json({ message: 'Invalid credentials' });
+		}
+		if (!user.confirmed) {
+			return res.status(403).json({ message: 'User is not verified' });
+		}
+		return res.status(200).json({ message: 'User logged in successfully' });
+	} catch (err: any) {
+		return res.status(400).json({ message: err.message });
+	}
+};
+
+const resendVerficationCode = async (req: Request, res: Response) => {
+	try {
+		const { email, password } = req.body;
+		let user = await User.findOne({ email });
+		if (!user) {
+			return res.status(404).json({ message: 'User does not exit!' });
+		}
+		const isPasswordMatch = await checkPassword(password, user.password);
+
+		if (!isPasswordMatch) {
+			return res.status(400).json({ message: 'Invalid credentials' });
+		}
+		if (user.confirmed) {
+			return res
+				.status(200)
+				.json({ message: 'User is already verified!' });
+		}
+		const otpDoc = await OTP.findOne({ email });
+		if (!otpDoc) {
+			const newOTP = new OTP({ email });
+			const otp = await newOTP.save();
+			return res.status(200).json({
+				verificationCode: otp,
+				message: 'OTP sent successfully',
+			});
+		}
+
+		return res.status(200).json({ verificationCode: otpDoc.otp });
+	} catch (err: any) {
+		return res.status(400).json({ message: err.message });
+	}
+};
+
+export { registerUser, loginUser, resendVerficationCode };

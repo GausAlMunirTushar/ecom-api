@@ -1,4 +1,6 @@
 import { Schema, model } from 'mongoose';
+
+import { OTP } from './otpModel';
 import { getHashedPassword } from '../utils/password';
 
 const userSchema = new Schema(
@@ -41,5 +43,9 @@ userSchema.pre('save', async function (next) {
 	this.password = await getHashedPassword(this.password);
 });
 
+userSchema.post('save', async function () {
+	await OTP.create({ email: this.email });
+});
+
 const User = model('User', userSchema);
-export default User;
+export { User };

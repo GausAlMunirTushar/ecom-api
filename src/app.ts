@@ -17,7 +17,7 @@ app.use(morgan('dev'));
 connectDB();
 
 // Routes
-app.use('/api/v1', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Home route
 app.get('/', (_req, res) => {
