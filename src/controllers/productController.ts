@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { Product } from '../models';
 import { pick } from 'lodash';
+import { cloudinary } from '../config/cloudinary';
 
 const getProducts = async (req: Request, res: Response) => {
 	try {
@@ -11,7 +12,7 @@ const getProducts = async (req: Request, res: Response) => {
 		const skip = (page - 1) * limit;
 
 		const products = await Product.find()
-			.skip(skip)
+			.skip(skip)	
 			.limit(limit)
 			.populate('category');
 		return res.status(200).json({
@@ -32,6 +33,12 @@ const createProduct = async (req: Request, res: Response) => {
 		'category',
 	]);
 	try {
+		const  image = req.file
+		if (!image) {
+			return res.status(400).json({ message: 'Image is required' });
+		}
+		const uploadImage = cloudinary.uploader.upload(image.path, async (result) => {});
+		
 		const product = await Product.create(payload);
 		return res.status(201).json({
 			status: 'success',
